@@ -2,6 +2,8 @@
 
 A clean, interactive compound interest calculator built with vanilla HTML, CSS, and JavaScript using [Chart.js](https://www.chartjs.org/).
 
+🔗 **Live demo: [tjsanzen.github.io/ComplexInterestCalculator](https://tjsanzen.github.io/ComplexInterestCalculator/)**
+
 ---
 
 > **⚠️ AI-Generated Code Disclaimer**
@@ -28,7 +30,7 @@ A clean, interactive compound interest calculator built with vanilla HTML, CSS, 
 - Live recalculation on every input change
 - Adjustable compounding frequency (annually, quarterly, monthly, daily)
 - Summary stats: final value, total contributed, interest earned, growth multiple
-- Responsive layout
+- Fully responsive — mobile-friendly with collapsible inputs panel
 
 ## Usage
 
@@ -58,4 +60,6 @@ Chart.js is loaded via CDN — an internet connection is required on first load.
 
 ## License
 
-MIT — do whatever you want with it.
+This project is licensed under the [Mozilla Public License Version 2.0](https://www.mozilla.org/en-US/MPL/2.0/).
+
+You are free to use, modify, and distribute this software. If you modify any files covered by this license, those modifications must also be made available under the MPL 2.0. See the [LICENSE](LICENSE) file for full terms.
