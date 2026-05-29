@@ -35,8 +35,8 @@ A clean, interactive compound interest calculator built with vanilla HTML, CSS, 
 No build step required. Just clone or download the repo and open `index.html` in any modern browser.
 
 ```bash
-git clone https://github.com/your-username/compound-interest-calculator.git
-cd compound-interest-calculator
+git clone https://github.com/tjsanzen/ComplexInterestCalculator.git
+cd ComplexInterestCalculator
 open index.html
 ```
 
