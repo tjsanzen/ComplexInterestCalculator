@@ -117,8 +117,116 @@ header {
   gap: 20px;
   align-items: start;
 }
-@media (max-width: 800px) {
+
+/* =============================================
+   RESPONSIVE — TABLET (≤900px)
+   ============================================= */
+@media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .chart-container { height: 280px; }
+}
+
+/* =============================================
+   RESPONSIVE — MOBILE (≤600px)
+   ============================================= */
+@media (max-width: 600px) {
+
+  .app { padding: 0 14px 48px; }
+
+  /* Header */
+  header { padding: 20px 0 14px; margin-bottom: 14px; }
+  .header-inner { flex-direction: column; gap: 3px; align-items: flex-start; }
+  .logo-symbol { font-size: 1.6rem; }
+  .logo-text   { font-size: 1.2rem; }
+  .tagline     { font-size: 0.68rem; }
+
+  /* Mode bar — scrolls horizontally */
+  .mode-bar {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 4px;
+    padding: 5px;
+    margin-bottom: 14px;
+  }
+  .mode-bar::-webkit-scrollbar { display: none; }
+  .mode-btn { flex-shrink: 0; padding: 8px 12px; font-size: 0.78rem; gap: 4px; }
+  .mode-icon { font-size: 0.85rem; }
+
+  /* Inputs panel — collapsible */
+  .panel-inputs {
+    padding: 0;
+    overflow: hidden;
+  }
+  .inputs-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    border: none;
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    text-align: left;
+  }
+  .inputs-toggle-arrow {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    transition: transform 0.22s ease;
+    flex-shrink: 0;
+  }
+  .inputs-toggle.open .inputs-toggle-arrow { transform: rotate(180deg); }
+  .inputs-inner {
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .inputs-inner.collapsed { display: none; }
+  .inputs-inner .input-group:first-child { margin-top: 16px; }
+
+  /* Results panel */
+  .panel-results { padding: 14px; }
+
+  /* Stats — 2×2 */
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat-card { padding: 10px 11px; }
+  .stat-label { font-size: 0.6rem; }
+  .stat-value { font-size: 0.95rem; }
+
+  /* Chart */
+  .chart-container { height: 210px; margin-bottom: 12px; }
+
+  /* Inputs */
+  .field { margin-bottom: 11px; }
+  input[type="number"], select { font-size: 1rem; padding: 11px 12px; } /* 1rem prevents iOS auto-zoom */
+  .prefix, .suffix { font-size: 0.82rem; padding: 0 9px; }
+  select { font-size: 1rem; padding: 11px 12px; }
+
+  /* Waypoints */
+  .waypoint-row { gap: 6px; }
+  .waypoint-row input { padding: 9px 8px; font-size: 1rem; }
+
+  /* Table — hide End Balance col, show inline in row label instead */
+  .wp-table { font-size: 0.76rem; }
+  .wp-table th, .wp-table td { padding: 8px 8px; }
+
+  /* Buttons */
+  .btn-calculate { padding: 15px; font-size: 0.92rem; }
+  .btn-add-waypoint { padding: 11px; }
+  .btn-remove-wp { width: 36px; height: 36px; }
+
+  /* Group spacing */
+  .input-group { margin-bottom: 18px; }
+
+  /* Mode note */
+  .mode-note { font-size: 0.7rem; }
 }
 
 /* ===== PANELS ===== */
@@ -328,9 +436,6 @@ select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px
   gap: 12px;
   margin-bottom: 20px;
 }
-@media (max-width: 900px) {
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
-}
 .stat-card {
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -396,6 +501,9 @@ select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px
 /* Phase row coloring */
 .wp-table tr.phase-grow td:first-child { color: var(--green); }
 .wp-table tr.phase-draw td:first-child { color: var(--red); }
+
+/* Toggle hidden on desktop — JS reveals on mobile */
+.inputs-toggle { display: none; }
 
 /* ===== UTILITY ===== */
 .hidden { display: none !important; }
