@@ -113,12 +113,15 @@ function calcBurndown(principal, annualRate, years, n, monthlyWithdraw) {
   const maxPeriods = Math.round(years * n);
   const withdrawPerPeriod = monthlyWithdraw * (12 / n);
   const data = [];
-  let balance = principal, zeroYear = null;
+  let balance = principal, prevBalance = principal, zeroYear = null;
   data.push({ year: 0, balance, contributed: 0, interest: 0 });
   for (let p = 1; p <= maxPeriods; p++) {
+    prevBalance = balance;
     balance = balance * (1 + r) - withdrawPerPeriod;
     if (balance <= 0 && zeroYear === null) {
-      zeroYear = p / n;
+      // Interpolate the fractional period where balance crossed zero
+      const fraction = prevBalance / (prevBalance - balance); // 0–1 within this period
+      zeroYear = (p - 1 + fraction) / n;
       data.push({ year: Math.round(zeroYear * 10) / 10, balance: 0, contributed: 0, interest: 0 });
       break;
     }
@@ -129,18 +132,13 @@ function calcBurndown(principal, annualRate, years, n, monthlyWithdraw) {
   return { data, zeroYear };
 }
 
-/**
- * Retire: grow from year 0→retireYear with contributions, then
- * draw down from retireYear→endYear with withdrawals.
- * Returns combined data array + phase summary.
- */
 function calcRetire(principal, annualRate, retireYear, endYear, n, monthlyContrib, monthlyWithdraw) {
   const r = annualRate / 100 / n;
   const contribPerPeriod  = monthlyContrib  * (12 / n);
   const withdrawPerPeriod = monthlyWithdraw * (12 / n);
 
   const data = [];
-  let balance = principal, totalContrib = principal, peakBalance = principal;
+  let balance = principal, totalContrib = principal;
   let retireBalance = 0, zeroYear = null;
 
   data.push({ year: 0, balance, contributed: totalContrib, phase: 'grow' });
@@ -159,24 +157,35 @@ function calcRetire(principal, annualRate, retireYear, endYear, n, monthlyContri
       });
     }
   }
-  retireBalance = balance;
-  peakBalance = balance;
+  retireBalance = Math.max(0, balance);
+  // Freeze contributions at retirement value for chart line
+  const frozenContrib = totalContrib;
 
   // Phase 2: Drawdown
   const drawPeriods = Math.round((endYear - retireYear) * n);
+  let prevBalance = balance;
   for (let p = 1; p <= drawPeriods; p++) {
+    prevBalance = balance;
     balance = balance * (1 + r) - withdrawPerPeriod;
     const absYear = retireYear + p / n;
+
     if (balance <= 0 && zeroYear === null) {
-      zeroYear = absYear;
-      data.push({ year: Math.round(absYear * 10) / 10, balance: 0, contributed: totalContrib, phase: 'draw' });
+      // Interpolate exact zero-crossing year
+      const fraction = prevBalance / (prevBalance - balance);
+      zeroYear = retireYear + (p - 1 + fraction) / n;
+      data.push({
+        year: Math.round(zeroYear * 10) / 10,
+        balance: 0,
+        contributed: frozenContrib,
+        phase: 'draw',
+      });
       break;
     }
     if (p % n === 0 || p === drawPeriods) {
       data.push({
         year: Math.round(absYear * 10) / 10,
         balance: Math.max(0, balance),
-        contributed: totalContrib,
+        contributed: frozenContrib,
         phase: 'draw',
       });
     }
@@ -194,9 +203,9 @@ function calcRetire(principal, annualRate, retireYear, endYear, n, monthlyContri
     {
       label: '↓ Withdrawal',
       startYr: retireYear,
-      endYr: zeroYear ?? endYear,
+      endYr: zeroYear != null ? Math.round(zeroYear * 10) / 10 : endYear,
       monthly: `-${fmt(monthlyWithdraw)}/mo`,
-      endBalance: zeroYear ? 0 : data[data.length - 1].balance,
+      endBalance: zeroYear != null ? 0 : Math.max(0, data[data.length - 1].balance),
       type: 'draw',
     },
   ];
@@ -388,10 +397,12 @@ function calculate() {
     const balances = data.map(d => d.balance);
     const contribs = data.map(d => d.contributed);
 
-    // Split line into two segments for color change at retirement
-    const retireIdx = data.findIndex(d => d.year >= retireYear);
-    const growBalances = balances.map((v, i) => i <= retireIdx ? v : null);
-    const drawBalances = balances.map((v, i) => i >= retireIdx ? v : null);
+    // Split line into two color segments at retirement boundary
+    const growBalances = data.map(d => d.phase === 'grow' ? d.balance : null);
+    const drawBalances = data.map(d => d.phase === 'draw' ? d.balance : null);
+    // Bridge: include the last grow point in draw series so lines connect
+    const bridgeIdx = data.reduce((last, d, i) => d.phase === 'grow' ? i : last, -1);
+    if (bridgeIdx >= 0) drawBalances[bridgeIdx] = data[bridgeIdx].balance;
 
     renderChart(labels, [
       { label: 'Accumulation', data: growBalances, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.07)', fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2, spanGaps: false },
@@ -471,7 +482,43 @@ document.querySelectorAll(
 
 calcBtn.addEventListener('click', calculate);
 
-// ─── Init ─────────────────────────────────────────────
+// ─── Mobile inputs toggle ─────────────────────────────
+(function () {
+  const toggle = document.getElementById('inputs-toggle');
+  const inner  = document.getElementById('inputs-inner');
+  if (!toggle || !inner) return;
+
+  function isMobile() { return window.innerWidth <= 600; }
+
+  function applyToggleVisibility() {
+    if (isMobile()) {
+      toggle.style.display = 'flex';
+    } else {
+      toggle.style.display = 'none';
+      inner.classList.remove('collapsed');
+      toggle.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    const isOpen = !inner.classList.contains('collapsed');
+    if (isOpen) {
+      inner.classList.add('collapsed');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    } else {
+      inner.classList.remove('collapsed');
+      toggle.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  applyToggleVisibility();
+  window.addEventListener('resize', applyToggleVisibility);
+})();
+
+
 buildDefaultWaypoints();
 updateModeSections();
 calculate();
