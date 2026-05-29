@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compound Interest Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="app">
+
+    <header>
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-symbol">∫</span>
+          <span class="logo-text">COMPOUND</span>
+        </div>
+        <p class="tagline">Interest Calculator</p>
+      </div>
+    </header>
+
+    <!-- Mode Selector -->
+    <div class="mode-bar">
+      <button class="mode-btn active" data-mode="growth">
+        <span class="mode-icon">↑</span> Growth
+      </button>
+      <button class="mode-btn" data-mode="burndown">
+        <span class="mode-icon">↓</span> Burn to Zero
+      </button>
+      <button class="mode-btn" data-mode="retire">
+        <span class="mode-icon">⇌</span> Retire
+      </button>
+      <button class="mode-btn" data-mode="waypoints">
+        <span class="mode-icon">◈</span> Waypoints
+      </button>
+    </div>
+
+    <main class="layout">
+
+      <!-- LEFT PANEL: Inputs -->
+      <aside class="panel panel-inputs">
+
+        <!-- Core Inputs (all modes) -->
+        <section class="input-group">
+          <h3 class="group-label">Core</h3>
+
+          <div class="field">
+            <label for="principal">Initial Amount</label>
+            <div class="input-wrap">
+              <span class="prefix">$</span>
+              <input type="number" id="principal" value="10000" min="0" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="rate">Annual Interest Rate</label>
+            <div class="input-wrap">
+              <input type="number" id="rate" value="7" min="0" step="0.1" />
+              <span class="suffix">%</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="years">Time Horizon</label>
+            <div class="input-wrap">
+              <input type="number" id="years" value="30" min="1" max="100" />
+              <span class="suffix">yrs</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="compound-freq">Compounding</label>
+            <select id="compound-freq">
+              <option value="1">Annually</option>
+              <option value="4">Quarterly</option>
+              <option value="12" selected>Monthly</option>
+              <option value="365">Daily</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- Growth Mode -->
+        <section class="input-group mode-section" id="section-growth">
+          <h3 class="group-label">Monthly Contribution</h3>
+          <div class="field">
+            <label for="monthly-contrib">Amount / Month</label>
+            <div class="input-wrap">
+              <span class="prefix">$</span>
+              <input type="number" id="monthly-contrib" value="200" min="0" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Burn to Zero Mode -->
+        <section class="input-group mode-section hidden" id="section-burndown">
+          <h3 class="group-label">Monthly Withdrawal</h3>
+          <div class="field">
+            <label for="monthly-withdraw">Amount / Month</label>
+            <div class="input-wrap">
+              <span class="prefix">$</span>
+              <input type="number" id="monthly-withdraw" value="800" min="0" />
+            </div>
+          </div>
+          <p class="mode-note">How long until the account hits zero?</p>
+        </section>
+
+        <!-- Retire Mode -->
+        <section class="input-group mode-section hidden" id="section-retire">
+          <h3 class="group-label">Accumulation Phase</h3>
+          <div class="field">
+            <label for="retire-contrib">Monthly Contribution</label>
+            <div class="input-wrap">
+              <span class="prefix">$</span>
+              <input type="number" id="retire-contrib" value="500" min="0" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="retire-year">Retirement Year</label>
+            <div class="input-wrap">
+              <input type="number" id="retire-year" value="30" min="1" />
+              <span class="suffix">yr</span>
+            </div>
+          </div>
+
+          <h3 class="group-label" style="margin-top:6px;">Withdrawal Phase</h3>
+          <div class="field">
+            <label for="retire-withdraw">Monthly Withdrawal</label>
+            <div class="input-wrap">
+              <span class="prefix">$</span>
+              <input type="number" id="retire-withdraw" value="3000" min="0" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="retire-end-year">End Year (total)</label>
+            <div class="input-wrap">
+              <input type="number" id="retire-end-year" value="60" min="2" />
+              <span class="suffix">yr</span>
+            </div>
+          </div>
+          <p class="mode-note">Simulate saving until retirement, then drawing down the nest egg.</p>
+        </section>
+
+        <!-- Waypoints Mode -->
+        <section class="input-group mode-section hidden" id="section-waypoints">
+          <h3 class="group-label">Contribution Waypoints</h3>
+          <p class="mode-note">Define contribution amounts that change at specific years.</p>
+
+          <div id="waypoints-list"></div>
+
+          <button class="btn-add-waypoint" id="add-waypoint-btn">+ Add Waypoint</button>
+        </section>
+
+        <button class="btn-calculate" id="calculate-btn">Calculate</button>
+
+      </aside>
+
+      <!-- RIGHT PANEL: Results -->
+      <div class="panel panel-results">
+
+        <!-- Stats Row -->
+        <div class="stats-row" id="stats-row">
+          <div class="stat-card" id="stat-final">
+            <span class="stat-label">Final Value</span>
+            <span class="stat-value" id="val-final">—</span>
+          </div>
+          <div class="stat-card" id="stat-contributed">
+            <span class="stat-label">Total Contributed</span>
+            <span class="stat-value" id="val-contributed">—</span>
+          </div>
+          <div class="stat-card" id="stat-interest">
+            <span class="stat-label">Interest Earned</span>
+            <span class="stat-value" id="val-interest">—</span>
+          </div>
+          <div class="stat-card stat-highlight" id="stat-extra">
+            <span class="stat-label" id="extra-label">Growth Multiple</span>
+            <span class="stat-value" id="val-extra">—</span>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-container">
+          <canvas id="mainChart"></canvas>
+        </div>
+
+        <!-- Retire phase annotation -->
+        <div id="retire-breakdown" class="hidden">
+          <h3 class="group-label" style="margin-bottom:12px;">Retirement Phases</h3>
+          <table class="wp-table">
+            <thead>
+              <tr>
+                <th>Phase</th>
+                <th>Years</th>
+                <th>Monthly</th>
+                <th>End Balance</th>
+              </tr>
+            </thead>
+            <tbody id="retire-table-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Waypoints Breakdown Table (only in waypoints mode) -->
+        <div id="waypoints-breakdown" class="hidden">
+          <h3 class="group-label" style="margin-bottom:12px;">Waypoint Phases</h3>
+          <table class="wp-table">
+            <thead>
+              <tr>
+                <th>Phase</th>
+                <th>Years</th>
+                <th>Monthly</th>
+                <th>End Balance</th>
+              </tr>
+            </thead>
+            <tbody id="wp-table-body"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
